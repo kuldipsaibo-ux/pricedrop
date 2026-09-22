@@ -1,1 +1,209 @@
-index.html
+index.html<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PriceDrop</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #111;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 18px 0 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 15px;
+      border: 0;
+      border-radius: 10px;
+      background: #111;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .result {
+      display: none;
+      margin-top: 25px;
+      padding: 18px;
+      background: #f0fff4;
+      border-radius: 12px;
+    }
+
+    .alert {
+      margin-top: 25px;
+      padding: 18px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #eee;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>PriceDrop</h1>
+
+    <div class="subtitle">
+      Know when the price falls.
+    </div>
+
+    <div class="card">
+
+      <label>Product URL</label>
+
+      <input
+        id="url"
+        type="url"
+        placeholder="Paste product link"
+      >
+
+      <label>Alert me when price falls below</label>
+
+      <input
+        id="target"
+        type="number"
+        placeholder="₹ 5000"
+      >
+
+      <button onclick="createAlert()">
+        🔔 Create Price Alert
+      </button>
+
+      <div id="result" class="result">
+        ✅ Price alert created!
+      </div>
+
+    </div>
+
+    <h2 style="margin-top:35px;">My Alerts</h2>
+
+    <div id="alerts"></div>
+
+  </div>
+
+<script>
+
+function createAlert() {
+
+  const url = document.getElementById("url").value;
+  const target = document.getElementById("target").value;
+
+  if (!url || !target) {
+    alert("Please enter a product link and target price.");
+    return;
+  }
+
+  const alertData = {
+    url: url,
+    target: target,
+    created: new Date().toLocaleString()
+  };
+
+  let alerts =
+    JSON.parse(localStorage.getItem("alerts")) || [];
+
+  alerts.push(alertData);
+
+  localStorage.setItem(
+    "alerts",
+    JSON.stringify(alerts)
+  );
+
+  document.getElementById("result").style.display = "block";
+
+  document.getElementById("url").value = "";
+  document.getElementById("target").value = "";
+
+  showAlerts();
+}
+
+
+function showAlerts() {
+
+  const container =
+    document.getElementById("alerts");
+
+  const alerts =
+    JSON.parse(localStorage.getItem("alerts")) || [];
+
+  container.innerHTML = "";
+
+  alerts.forEach((item, index) => {
+
+    container.innerHTML += `
+      <div class="alert">
+
+        <strong>🔔 Price Alert #${index + 1}</strong>
+
+        <p>
+          Target price:
+          <strong>₹${item.target}</strong>
+        </p>
+
+        <small>
+          ${item.url}
+        </small>
+
+        <p>
+          🟡 Waiting for price drop
+        </p>
+
+      </div>
+    `;
+
+  });
+}
+
+showAlerts();
+
+</script>
+
+</body>
+</html>
