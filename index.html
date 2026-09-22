@@ -1,0 +1,282 @@
+index.html <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PriceDrop</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #111;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 18px 0 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 15px;
+      border: 0;
+      border-radius: 10px;
+      background: #111;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .result {
+      display: none;
+      margin-top: 25px;
+      padding: 18px;
+      background: #f0fff4;
+      border-radius: 12px;
+    }
+
+    .alert {
+      margin-top: 15px;
+      padding: 18px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      word-break: break-word;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>PriceDrop</h1>
+
+  <div class="subtitle">
+    Know when the price falls.
+  </div>
+
+  <div class="card">
+
+    <label>Product URL</label>
+
+    <input
+      id="url"
+      type="url"
+      placeholder="Paste product link"
+    >
+
+    <label>Alert me when price falls below</label>
+
+    <input
+      id="target"
+      type="number"
+      placeholder="₹ 5000"
+    >
+
+    <button onclick="createAlert()">
+      🔔 Create Price Alert
+    </button>
+
+    <div id="result" class="result">
+      ✅ Price alert saved!
+    </div>
+
+  </div>
+
+  <h2 style="margin-top:35px;">My Alerts</h2>
+
+  <div id="alerts"></div>
+
+</div>
+
+
+<!-- Firebase -->
+<script type="module">
+
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    orderBy
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+  // Your Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyC4quH8_XwJJLF3IsY8jq-iKKsuMyWZCgQ",
+    authDomain: "pricedrop-14f4a.firebaseapp.com",
+    projectId: "pricedrop-14f4a",
+    storageBucket: "pricedrop-14f4a.firebasestorage.app",
+    messagingSenderId: "550144278475",
+    appId: "1:550144278475:web:7f38bd8e98cafed21f404e"
+  };
+
+
+  // Start Firebase
+  const app = initializeApp(firebaseConfig);
+
+  // Start Firestore
+  const db = getFirestore(app);
+
+
+  // Make function available to the button
+  window.createAlert = async function() {
+
+    const url =
+      document.getElementById("url").value.trim();
+
+    const target =
+      document.getElementById("target").value;
+
+
+    if (!url || !target) {
+      alert("Please enter a product link and target price.");
+      return;
+    }
+
+
+    try {
+
+      await addDoc(collection(db, "priceAlerts"), {
+
+        url: url,
+
+        targetPrice: Number(target),
+
+        createdAt: new Date().toISOString(),
+
+        status: "watching"
+
+      });
+
+
+      document.getElementById("result").style.display = "block";
+
+      document.getElementById("url").value = "";
+
+      document.getElementById("target").value = "";
+
+      loadAlerts();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert("Could not save the alert. Please try again.");
+
+    }
+
+  };
+
+
+  // Load alerts from Firebase
+  async function loadAlerts() {
+
+    const container =
+      document.getElementById("alerts");
+
+    container.innerHTML = "";
+
+    try {
+
+      const q =
+        query(
+          collection(db, "priceAlerts"),
+          orderBy("createdAt", "desc")
+        );
+
+      const snapshot = await getDocs(q);
+
+
+      snapshot.forEach((doc) => {
+
+        const item = doc.data();
+
+        container.innerHTML += `
+
+          <div class="alert">
+
+            <strong>🔔 Price Alert</strong>
+
+            <p>
+              Target:
+              <strong>₹${item.targetPrice}</strong>
+            </p>
+
+            <small>
+              ${item.url}
+            </small>
+
+            <p>
+              🟡 Watching
+            </p>
+
+          </div>
+
+        `;
+
+      });
+
+    } catch (error) {
+
+      console.error(error);
+
+      container.innerHTML =
+        "<p>Unable to load alerts.</p>";
+
+    }
+
+  }
+
+
+  loadAlerts();
+
+</script>
+
+</body>
+</html>
